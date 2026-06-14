@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#1989fa">
+<link rel="manifest" href="manifest.json">
+<title>刷题工具</title>
+<link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f7f8fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.page{padding-top:46px;padding-bottom:50px;min-height:100vh}
+.page-inner{padding:12px 16px}
+.section-title{font-size:16px;font-weight:600;color:#323233;margin:16px 0 12px}
+.empty-state{padding:60px 0;text-align:center;color:#969799}
+.empty-state .icon{font-size:64px;margin-bottom:16px}
+.q-card{background:#fff;border-radius:8px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}
+.q-card .q-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.q-card .q-text{font-size:15px;color:#323233;line-height:1.5;flex:1;word-break:break-all}
+.q-card .q-answer{font-size:14px;color:#07c160;margin-top:6px;padding:8px 10px;background:#f0faf4;border-radius:4px;display:none}
+.q-card .q-answer.show{display:block}
+.q-card .q-meta{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px;color:#969799}
+.q-card .q-del{position:absolute;top:8px;right:8px;color:#ee0a24;font-size:18px;padding:4px;cursor:pointer}
+.filter-bar{display:flex;gap:8px;padding:8px 16px;overflow-x:auto;white-space:nowrap}
+.filter-bar::-webkit-scrollbar{display:none}
+.practice-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid #f0f0f0;font-size:14px;color:#646566}
+.practice-card{padding:20px 16px}
+.practice-card .q-text{font-size:17px;color:#323233;line-height:1.6;margin:12px 0 20px;word-break:break-all}
+.options-list{display:flex;flex-direction:column;gap:10px}
+.opt-item{padding:12px 14px;border:1px solid #e8e8e8;border-radius:8px;font-size:15px;transition:all .2s}
+.opt-item.selected{border-color:#1989fa;background:#f0f7ff;color:#1989fa}
+.opt-item.correct{border-color:#07c160;background:#f0faf4;color:#07c160}
+.opt-item.wrong{border-color:#ee0a24;background:#fef0ef;color:#ee0a24}
+.judge-btns{display:flex;gap:16px;margin:16px 0}
+.judge-btns .van-button{flex:1;height:56px;font-size:18px}
+.result-badge{padding:16px 0;text-align:center;font-size:18px;font-weight:600}
+.result-badge.correct{color:#07c160}
+.result-badge.wrong{color:#ee0a24}
+.result-detail{padding:12px 16px;background:#f7f8fa;border-radius:8px;margin:12px 0}
+.result-detail .label{font-size:13px;color:#969799;margin-bottom:4px}
+.result-detail .value{font-size:15px;color:#323233;word-break:break-all}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.stat-card{background:#fff;border-radius:8px;padding:20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.stat-card .num{font-size:28px;font-weight:700;color:#323233}
+.stat-card .label{font-size:13px;color:#969799;margin-top:6px}
+.stat-card .num.blue{color:#1989fa}
+.stat-card .num.green{color:#07c160}
+.stat-card .num.red{color:#ee0a24}
+.stat-card .num.orange{color:#ff976a}
+.import-area{padding:20px 16px}
+.import-area textarea{width:100%;min-height:200px;border:1px solid #e8e8e8;border-radius:8px;padding:12px;font-size:14px;resize:vertical;font-family:inherit}
+.import-area textarea:focus{outline:none;border-color:#1989fa}
+.file-upload-area{border:2px dashed #d9d9d9;border-radius:8px;padding:40px 20px;text-align:center;margin:16px 0;cursor:pointer}
+.file-upload-area:hover{border-color:#1989fa}
+.file-upload-area .icon{font-size:48px;color:#c8c9cc}
+.file-upload-area .text{font-size:14px;color:#969799;margin-top:12px}
+.preview-list{margin:12px 0;max-height:300px;overflow-y:auto}
+.preview-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:14px;color:#323233}
+.preview-item:last-child{border-bottom:none}
+.practice-finish{text-align:center;padding:40px 20px}
+.practice-finish .big-icon{font-size:64px;margin-bottom:16px}
+.practice-finish .title{font-size:22px;font-weight:600;margin-bottom:8px}
+.practice-finish .stats{font-size:15px;color:#646566;margin-bottom:4px}
+.practice-finish .acc{font-size:36px;font-weight:700;margin:16px 0}
+.practice-finish .acc.good{color:#07c160}
+.practice-finish .acc.ok{color:#ff976a}
+.practice-finish .acc.bad{color:#ee0a24}
+.wrong-badge{position:absolute;top:-2px;right:-2px;background:#ee0a24;color:#fff;font-size:10px;border-radius:10px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.file-input-hidden{display:none}
+.van-tag{margin-right:4px}
+.opt-letter{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:#f7f8fa;color:#646566;font-size:13px;margin-right:8px;flex-shrink:0}
+.opt-item.selected .opt-letter{background:#1989fa;color:#fff}
+.opt-item.correct .opt-letter{background:#07c160;color:#fff}
+.opt-item.wrong .opt-letter{background:#ee0a24;color:#fff}
+.opt-item .opt-label{display:flex;align-items:center;flex:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <van-nav-bar :title="navTitle" />
+  
+  <!-- 题库 -->
+  <div v-show="activeTab === 0" class="page">
+    <div style="padding:8px 16px">
+      <van-search v-model="bankSearch" placeholder="搜索题目" shape="round" @search="bankSearch = $event" />
+    </div>
+    <div class="filter-bar">
+      <van-tag :type="bankFilter==='all'?'primary':'default'" size="medium" style="padding:4px 12px" @click="bankFilter='all'">全部</van-tag>
+      <van-tag :type="bankFilter==='choice'?'primary':'default'" size="medium" style="padding:4px 12px" @click="bankFilter='choice'">选择</van-tag>
+      <van-tag :type="bankFilter==='judge'?'primary':'default'" size="medium" style="padding:4px 12px" @click="bankFilter='judge'">判断</van-tag>
+      <van-tag :type="bankFilter==='fill'?'primary':'default'" size="medium" style="padding:4px 12px" @click="bankFilter='fill'">填空</van-tag>
+      <van-tag :type="bankFilter==='short'?'primary':'default'" size="medium" style="padding:4px 12px" @click="bankFilter='short'">简答</van-tag>
+    </div>
+    <div class="page-inner" style="padding-top:0">
+      <div v-if="filteredQuestions.length === 0" class="empty-state">
+        <div class="icon">📚</div>
+        <div v-if="questions.length === 0">
+          <p style="margin-bottom:16px">还没有题目，先导入吧</p>
+          <van-button type="primary" round @click="showImport">导入题库</van-button>
+        </div>
+        <div v-else><p>没有匹配的题目</p></div>
+      </div>
+      <div v-for="(q, i) in filteredQuestions" :key="q.id" class="q-card" @click="toggleAnswer(i)">
+        <div class="q-top">
+          <van-tag :type="typeTag(q.type)">{{typeLabel(q.type)}}</van-tag>
+          <div class="q-text">{{truncate(q.question, 60)}}</div>
+          <span class="q-del" @click.stop="deleteQuestion(q.id)">×</span>
+        </div>
+        <div class="q-meta">
+          <span>{{q.correctCount + q.wrongCount > 0 ? '已做' : '未做'}}</span>
+          <span v-if="q.wrongCount > 0" style="color:#ee0a24">错{{q.wrongCount}}次</span>
+          <span style="margin-left:auto;color:#c8c9cc">点击查看答案</span>
+        </div>
+        <div :class="'q-answer' + (expandedId === q.id ? ' show' : '')">
+          <strong>答案：</strong>{{q.answer}}
+          <div v-if="q.options" style="margin-top:4px;font-size:13px;color:#969799">
+            {{q.options.map((o, i) => String.fromCharCode(65 + i) + '. ' + o).join('  ')}}
+          </div>
+        </div>
+      </div>
+      <div style="height:80px"></div>
+    </div>
+    <van-button round type="primary" icon="plus" size="large" style="position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:160px;z-index:10" @click="showImport">导入题目</van-button>
+  </div>
+  
+  <!-- 刷题 -->
+  <div v-show="activeTab === 1" class="page">
+    <div v-if="questions.length === 0" class="empty-state" style="padding-top:80px">
+      <div class="icon">📖</div><p>题库为空，请先导入题目</p>
+    </div>
+    <div v-else-if="!inPractice" class="page-inner">
+      <div class="section-title">练习设置</div>
+      <van-radio-group v-model="practiceScope" direction="vertical" style="margin-bottom:24px">
+        <van-radio name="all" shape="square" style="margin-bottom:12px">全部题目 ({{questions.length}}题)</van-radio>
+        <van-radio name="unanswered" shape="square" style="margin-bottom:12px">未做题目 ({{unansweredCount}}题)</van-radio>
+        <van-radio name="wrong" shape="square">错题本 ({{wrongList.length}}题)</van-radio>
+      </van-radio-group>
+      <van-button type="primary" block size="large" round :disabled="practiceCount === 0" @click="startPractice">
+        {{practiceCount === 0 ? '没有可练习的题目' : '开始刷题 (' + practiceCount + '题)'}}
+      </van-button>
+    </div>
+    <div v-else-if="!practiceDone">
+      <div class="practice-header">
+        <span>{{practiceProgress}}</span>
+        <span v-if="!showResult">正确率: {{practiceStats}}</span>
+        <span v-else>{{isCorrect ? '✓ 正确' : '✗ 错误'}}</span>
+        <van-button plain hairline size="small" @click="confirmExit">退出</van-button>
+      </div>
+      <div class="practice-card">
+        <van-tag :type="typeTag(curQ.type)">{{typeLabel(curQ.type)}}</van-tag>
+        <div class="q-text">{{curQ.question}}</div>
+        <div v-if="curQ.type==='choice'">
+          <div class="options-list">
+            <div v-for="(opt, i) in curQ.options" :key="i" :class="'opt-item' + (userChoice === String.fromCharCode(65+i) ? ' selected' : '') + (showResult && String.fromCharCode(65+i) === curQ.answer ? ' correct' : '') + (showResult && userChoice === String.fromCharCode(65+i) && userChoice !== curQ.answer ? ' wrong' : '')" @click="selectChoice(String.fromCharCode(65+i))">
+              <span class="opt-label">
+                <span class="opt-letter">{{String.fromCharCode(65+i)}}</span>
+                <span>{{opt}}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div v-if="curQ.type==='judge'" class="judge-btns">
+          <van-button :type="userChoice==='√'?'success':'default'" :class="showResult&&curQ.answer==='√'?'correct-btn':''" round @click="submitJudge('√')">✓ 正确</van-button>
+          <van-button :type="userChoice==='×'?'danger':'default'" :class="showResult&&curQ.answer==='×'?'correct-btn':''" round @click="submitJudge('×')">✗ 错误</van-button>
+        </div>
+        <div v-if="curQ.type==='fill'">
+          <van-field v-model="userText" placeholder="请输入答案" :disabled="showResult" clearable />
+        </div>
+        <div v-if="curQ.type==='short'">
+          <van-field v-model="userText" type="textarea" rows="4" placeholder="请输入答案" :disabled="showResult" clearable style="background:#f7f8fa;border-radius:8px;padding:8px" />
+        </div>
+        <div v-if="!showResult" style="margin-top:20px">
+          <van-button type="primary" block round :disabled="!canSubmit" @click="submitAnswer">提交答案</van-button>
+        </div>
+        <div v-if="showResult">
+          <div :class="'result-badge ' + (isCorrect ? 'correct' : 'wrong')">{{isCorrect ? '✓ 回答正确！' : '✗ 回答错误'}}</div>
+          <div v-if="!isCorrect" class="result-detail">
+            <div class="label">正确答案</div>
+            <div class="value">{{curQ.answer}}</div>
+            <div v-if="curQ.options" style="margin-top:8px">
+              <div class="label">答案解析</div>
+              <div class="value">{{String.fromCharCode(65 + curQ.options.indexOf(curQ.options[0]) + '...')}} 选项 {{curQ.answer}} 为正确答案</div>
+            </div>
+          </div>
+          <van-button type="primary" block round style="margin-top:16px" @click="nextQuestion">{{practiceIndex < practiceQuestions.length - 1 ? '下一题' : '查看结果'}}</van-button>
+        </div>
+      </div>
+    </div>
+    <div v-else class="page-inner">
+      <div class="practice-finish">
+        <div class="big-icon">{{accPercent >= 80 ? '🎉' : accPercent >= 50 ? '💪' : '📚'}}</div>
+        <div class="title">练习完成！</div>
+        <div class="stats">答对 <strong>{{correctCount}}</strong> / {{totalAnswered}} 题</div>
+        <div :class="'acc ' + (accPercent >= 80 ? 'good' : accPercent >= 50 ? 'ok' : 'bad')">{{accPercent}}%</div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
+          <van-button plain round @click="exitPractice">返回首页</van-button>
+          <van-button type="primary" round @click="restartPractice">再来一次</van-button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 错题本 -->
+  <div v-show="activeTab === 2" class="page">
+    <div class="page-inner">
+      <div v-if="wrongList.length === 0" class="empty-state">
+        <div class="icon">✅</div><p>暂无错题，继续保持！</p>
+      </div>
+      <div v-else>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <van-button plain size="small" icon="delete" @click="clearWrongBook">清空错题本</van-button>
+          <van-button type="primary" size="small" icon="play-circle" @click="practiceWrong">练习错题</van-button>
+          <span style="margin-left:auto;line-height:32px;font-size:13px;color:#969799">共{{wrongList.length}}题</span>
+        </div>
+        <div v-for="(q, i) in wrongList" :key="q.id" class="q-card" @click="toggleAnswer(q.id)">
+          <div class="q-top">
+            <van-tag :type="typeTag(q.type)">{{typeLabel(q.type)}}</van-tag>
+            <div class="q-text">{{truncate(q.question, 60)}}</div>
+            <span class="q-del" @click.stop="deleteQuestion(q.id)">×</span>
+          </div>
+          <div class="q-meta">
+            <span style="color:#ee0a24">错{{q.wrongCount}}次</span>
+            <span style="margin-left:auto;color:#c8c9cc">点击查看答案</span>
+          </div>
+          <div :class="'q-answer' + (expandedId === q.id ? ' show' : '')">
+            <strong>答案：</strong>{{q.answer}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 统计 -->
+  <div v-show="activeTab === 3" class="page">
+    <div class="page-inner">
+      <div v-if="questions.length === 0" class="empty-state">
+        <div class="icon">📊</div><p>暂无数据，导入题目后开始刷题吧</p>
+      </div>
+      <div v-else>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="num blue">{{questions.length}}</div>
+            <div class="label">总题数</div>
+          </div>
+          <div class="stat-card">
+            <div class="num green">{{answeredCount}}</div>
+            <div class="label">已答题</div>
+          </div>
+          <div class="stat-card">
+            <div class="num" :class="accAll >= 80 ? 'green' : accAll >= 50 ? 'orange' : 'red'">{{accAll}}%</div>
+            <div class="label">正确率</div>
+          </div>
+          <div class="stat-card">
+            <div class="num red">{{wrongList.length}}</div>
+            <div class="label">错题数</div>
+          </div>
+        </div>
+        <div class="section-title">题型分布</div>
+        <van-cell-group inset>
+          <van-cell v-for="t in typeStats" :key="t.type" :title="t.label" center>
+            <template #value>
+              <div style="display:flex;align-items:center;gap:8px">
+                <van-progress :percentage="t.pct" :stroke-width="6" style="width:100px" />
+                <span style="font-size:13px;color:#969799;min-width:50px;text-align:right">{{t.answered}}/{{t.total}}</span>
+              </div>
+            </template>
+          </van-cell>
+        </van-cell-group>
+        <div class="section-title">最近操作</div>
+        <div style="font-size:13px;color:#969799;text-align:center;padding:20px 0">
+          数据本地保存，清除浏览器缓存会丢失
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <van-tabbar v-model="activeTab">
+    <van-tabbar-item icon="records">题库</van-tabbar-item>
+    <van-tabbar-item icon="play-circle" :badge="wrongList.length > 0 ? wrongList.length : ''">刷题</van-tabbar-item>
+    <van-tabbar-item icon="cross-circle-o" :badge="wrongList.length > 0 ? wrongList.length : ''">错题</van-tabbar-item>
+    <van-tabbar-item icon="chart-trending-o">统计</van-tabbar-item>
+  </van-tabbar>
+  
+  <van-action-sheet v-model:show="showImportSheet" :actions="importActions" cancel-text="取消" close-on-click-action @select="onImportSelect" />
+  
+  <van-popup v-model:show="showTextImport" position="bottom" :style="{height:'85%'}" round closeable close-icon-position="top-left">
+    <div style="padding:16px;padding-top:50px">
+      <div style="font-size:18px;font-weight:600;margin-bottom:16px">粘贴题库文本</div>
+      <div style="font-size:13px;color:#969799;margin-bottom:12px">支持格式：选择题/判断题/填空题/简答题，每道题以数字编号开头</div>
+      <div class="import-area" style="padding:0">
+        <textarea v-model="importText" placeholder="在此粘贴题目文本...&#10;&#10;例如：&#10;1. 中国的首都是？&#10;A. 北京  B. 上海  C. 广州  D. 深圳&#10;答案：A"></textarea>
+      </div>
+      <van-button type="primary" block round :disabled="!importText.trim()" @click="handleTextImport">解析并导入</van-button>
+    </div>
+  </van-popup>
+  
+  <van-dialog v-model:show="showImportResult" title="导入结果" :show-confirm-button="parsedQuestions.length > 0" confirm-button-text="确认导入" :close-on-click-overlay="false" @confirm="confirmImport" @cancel="cancelImport">
+    <div style="padding:16px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">{{parsedQuestions.length > 0 ? '🎉' : '😅'}}</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">{{parsedQuestions.length > 0 ? '解析成功！' : '未识别到题目'}}</div>
+      <div style="font-size:14px;color:#646566">共识别 <strong>{{parsedQuestions.length}}</strong> 道题目</div>
+      <div v-if="parsedQuestions.length > 0" class="preview-list">
+        <div v-for="(q, i) in parsedQuestions.slice(0, 10)" :key="i" class="preview-item">
+          <van-tag :type="typeTag(q.type)" size="small">{{typeLabel(q.type)}}</van-tag>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{q.question}}</span>
+        </div>
+        <div v-if="parsedQuestions.length > 10" style="text-align:center;font-size:13px;color:#969799;padding:8px">...还有 {{parsedQuestions.length - 10}} 道</div>
+      </div>
+    </div>
+  </van-dialog>
+  
+  <van-dialog v-model:show="showImportError" title="导入失败" confirm-button-text="知道了">
+    <div style="padding:16px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">😅</div>
+      <div style="font-size:14px;color:#646566">{{importErrorMsg}}</div>
+    </div>
+  </van-dialog>
+  
+  <input type="file" ref="excelInput" class="file-input-hidden" accept=".xlsx,.xls" @change="handleExcelUpload" />
+  <input type="file" ref="wordInput" class="file-input-hidden" accept=".docx" @change="handleWordUpload" />
+  
+  <van-dialog v-model:show="showDeleteConfirm" title="确认删除" show-cancel-button @confirm="doDelete">
+    <div style="padding:20px;text-align:center;font-size:15px">确定要删除这道题吗？</div>
+  </van-dialog>
+  <van-dialog v-model:show="showExitConfirm" title="确认退出" show-cancel-button @confirm="exitPractice">
+    <div style="padding:20px;text-align:center;font-size:15px">确定要退出当前练习吗？进度不会保存。</div>
+  </van-dialog>
+  <van-dialog v-model:show="showClearConfirm" title="确认清空" show-cancel-button @confirm="doClearWrong">
+    <div style="padding:20px;text-align:center;font-size:15px">清空后所有错题标记将被移除，确定吗？</div>
+  </van-dialog>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+
+<script>
+var QuestionParser = {
+  parseText: function(text) {
+    var questions = [];
+    var normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/[：]/g, ':').replace(/[、]/g, '.').replace(/[）]/g, ')').replace(/[（]/g, '(').replace(/[ＡＢＣＤ]/g, function(c) { return 'ABCD'['ＡＢＣＤ'.indexOf(c)] });
+    var lines = normalized.split('\n').map(function(l) { return l.trim() }).filter(function(l) { return l });
+    var blocks = [];
+    var cur = [];
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i];
+      if (/^\d+[.)]\s/.test(l) && cur.length > 0 && (cur.length > 3 || !/^\d/.test(cur[cur.length-1]))) {
+        blocks.push(cur); cur = [];
+      }
+      if (l) cur.push(l);
+    }
+    if (cur.length > 0) blocks.push(cur);
+    if (blocks.length === 0) blocks = [lines];
+    for (var b = 0; b < blocks.length; b++) {
+      var q = this._parseBlock(blocks[b]);
+      if (q) questions.push(q);
+    }
+    return questions;
+  },
+  _parseBlock: function(lines) {
+    var text = lines.join('\n');
+    var opts = lines.filter(function(l) { return /^[A-D][.)]\s/.test(l) });
+    if (opts.length >= 2) {
+      var optIdx = lines.indexOf(opts[0]);
+      var question = lines.slice(0, optIdx).filter(function(l) { return !/^答案[：:]/.test(l) }).join('\n');
+      var options = opts.map(function(l) { return l.replace(/^[A-D][.)]\s*/, '') });
+      var ansLine = lines.find(function(l) { return /^答案[：:]\s*[A-D]/i.test(l) });
+      var answer = ansLine ? (ansLine.match(/[A-D]/) || [''])[0] : '';
+      if (question) return { type:'choice', question:question, options:options, answer:answer || 'A' };
+    }
+    if (/答案[：:]\s*[√×正确错误对错]/.test(text) || /[（(]\s*[√×]\s*[）)]/.test(text)) {
+      var answer = '';
+      var m = text.match(/答案[：:]\s*([√×正确错误对错])/);
+      if (m) answer = m[1].replace(/正确|对/,'√').replace(/错误|错/,'×');
+      else { m = text.match(/[（(]\s*([√×])\s*[）)]/); if (m) answer = m[1]; }
+      var question = lines.filter(function(l) { return !/答案[：:]/i.test(l) }).join('\n').replace(/[（(]\s*[√×]\s*[）)]/g,'').trim();
+      if (question) return { type:'judge', question:question, answer:answer || '√' };
+    }
+    if (/_{2,}|＿＿+|[（(]\s*[）)]/.test(text)) {
+      var answer = '';
+      var m = text.match(/答案[：:]\s*(.+)/i);
+      if (m) answer = m[1].trim();
+      var question = lines.filter(function(l) { return !/^答案[：:]/i.test(l) }).join('\n');
+      if (question) return { type:'fill', question:question, answer:answer || '' };
+    }
+    var answer = '';
+    var m = text.match(/答案[：:]\s*(.+)/i);
+    if (m) answer = m[1].trim();
+    var question = lines.filter(function(l) { return !/^答案[：:]/i.test(l) }).join('\n');
+    if (question) return { type:'short', question:question, answer:answer || '' };
+    return null;
+  },
+  parseExcel: function(json) {
+    var questions = [];
+    for (var i = 0; i < json.length; i++) {
+      var row = json[i];
+      if (typeof row !== 'object' || row === null) continue;
+      var q = this._fromRow(row);
+      if (q) questions.push(q);
+    }
+    return questions;
+  },
+  _fromRow: function(row) {
+    var keys = Object.keys(row);
+    var qKey = this._findKey(keys, ['题目','题干','试题','question','Question','问题']);
+    var aKey = this._findKey(keys, ['答案','正确答案','参考答案','answer','Answer','正确']);
+    var tKey = this._findKey(keys, ['题型','类型','type','Type']);
+    var optKeys = ['A','a','选项A','A选项','B','b','选项B','B选项','C','c','选项C','C选项','D','d','选项D','D选项'];
+    var opts = [];
+    for (var i = 0; i < 4; i++) {
+      var k = this._findKey(keys, [optKeys[i*2], optKeys[i*2+1]]);
+      if (k && row[k]) opts.push(String(row[k]).trim());
+      else break;
+    }
+    var question = qKey ? String(row[qKey]).trim() : '';
+    var answer = aKey ? String(row[aKey]).trim() : '';
+    var type = tKey ? String(row[tKey]).trim() : '';
+    if (!question) return null;
+    if (type === '选择' || type === 'choice' || opts.length >= 2) {
+      if (opts.length >= 2) return { type:'choice', question:question, options:opts, answer:answer };
+    }
+    if (type === '判断' || type === 'judge') return { type:'judge', question:question, answer:answer || '√' };
+    if (type === '填空' || type === 'fill') return { type:'fill', question:question, answer:answer };
+    if (type === '简答' || type === 'short') return { type:'short', question:question, answer:answer };
+    if (/[√×正确错误对错]/.test(answer)) return { type:'judge', question:question, answer:answer.replace(/正确|对/,'√').replace(/错误|错/,'×') };
+    if (/_{2,}|＿＿+/.test(question)) return { type:'fill', question:question, answer:answer };
+    return { type:'short', question:question, answer:answer };
+  },
+  _findKey: function(keys, candidates) {
+    for (var i = 0; i < candidates.length; i++) {
+      if (keys.indexOf(candidates[i]) !== -1) return candidates[i];
+    }
+    return null;
+  }
+};
+
+var app = Vue.createApp({
+  data: function() {
+    return {
+      activeTab: 0,
+      questions: [],
+      bankFilter: 'all',
+      bankSearch: '',
+      expandedId: null,
+      showImportSheet: false,
+      showTextImport: false,
+      importText: '',
+      parsedQuestions: [],
+      showImportResult: false,
+      showImportError: false,
+      importErrorMsg: '',
+      importActions: [
+        { name:'📝 文本粘贴', value:'text' },
+        { name:'📊 Excel 文件 (.xlsx/.xls)', value:'excel' },
+        { name:'📄 Word 文件 (.docx)', value:'word' }
+      ],
+      inPractice: false,
+      practiceScope: 'all',
+      practiceQuestions: [],
+      practiceIndex: 0,
+      userChoice: null,
+      userText: '',
+      showResult: false,
+      isCorrect: false,
+      correctCount: 0,
+      totalAnswered: 0,
+      practiceDone: false,
+      showDeleteConfirm: false,
+      pendingDeleteId: null,
+      showExitConfirm: false,
+      showClearConfirm: false
+    };
+  },
+  computed: {
+    navTitle: function() {
+      var t = ['题库','刷题','错题本','统计'];
+      return t[this.activeTab] || '刷题工具';
+    },
+    filteredQuestions: function() {
+      var self = this;
+      return this.questions.filter(function(q) {
+        if (self.bankFilter !== 'all' && q.type !== self.bankFilter) return false;
+        if (self.bankSearch && q.question.indexOf(self.bankSearch) === -1) return false;
+        return true;
+      });
+    },
+    wrongList: function() {
+      return this.questions.filter(function(q) { return q.isWrong });
+    },
+    unansweredCount: function() {
+      return this.questions.filter(function(q) { return q.correctCount + q.wrongCount === 0 }).length;
+    },
+    practiceCount: function() {
+      if (this.practiceScope === 'all') return this.questions.length;
+      if (this.practiceScope === 'unanswered') return this.unansweredCount;
+      if (this.practiceScope === 'wrong') return this.wrongList.length;
+      return 0;
+    },
+    curQ: function() {
+      return this.practiceQuestions[this.practiceIndex] || null;
+    },
+    practiceProgress: function() {
+      return (this.practiceIndex + 1) + ' / ' + this.practiceQuestions.length;
+    },
+    practiceStats: function() {
+      if (this.totalAnswered === 0) return '0%';
+      return Math.round(this.correctCount / this.totalAnswered * 100) + '%';
+    },
+    canSubmit: function() {
+      if (!this.curQ) return false;
+      if (this.curQ.type === 'choice' || this.curQ.type === 'judge') return this.userChoice !== null;
+      return this.userText.trim().length > 0;
+    },
+    answeredCount: function() {
+      return this.questions.filter(function(q) { return q.correctCount + q.wrongCount > 0 }).length;
+    },
+    accAll: function() {
+      var total = 0, correct = 0;
+      for (var i = 0; i < this.questions.length; i++) {
+        total += this.questions[i].correctCount + this.questions[i].wrongCount;
+        correct += this.questions[i].correctCount;
+      }
+      return total === 0 ? 0 : Math.round(correct / total * 100);
+    },
+    accPercent: function() {
+      return this.totalAnswered === 0 ? 0 : Math.round(this.correctCount / this.totalAnswered * 100);
+    },
+    typeStats: function() {
+      var self = this;
+      var types = [
+        { type:'choice', label:'选择题' },
+        { type:'judge', label:'判断题' },
+        { type:'fill', label:'填空题' },
+        { type:'short', label:'简答题' }
+      ];
+      return types.map(function(t) {
+        var qs = self.questions.filter(function(q) { return q.type === t.type });
+        var answered = qs.filter(function(q) { return q.correctCount + q.wrongCount > 0 }).length;
+        return { type:t.type, label:t.label, total:qs.length, answered:answered, pct: qs.length === 0 ? 0 : Math.round(answered / qs.length * 100) };
+      });
+    }
+  },
+  methods: {
+    typeTag: function(t) {
+      return { choice:'primary', judge:'success', fill:'warning', short:'default' }[t] || 'default';
+    },
+    typeLabel: function(t) {
+      return { choice:'选择', judge:'判断', fill:'填空', short:'简答' }[t] || t;
+    },
+    truncate: function(s, n) {
+      return s && s.length > n ? s.slice(0, n) + '...' : s;
+    },
+    toggleAnswer: function(id) {
+      this.expandedId = this.expandedId === id ? null : id;
+    },
+    showImport: function() {
+      this.showImportSheet = true;
+    },
+    onImportSelect: function(action) {
+      this.showImportSheet = false;
+      if (action.value === 'text') {
+        this.importText = '';
+        this.showTextImport = true;
+      } else if (action.value === 'excel') {
+        this.$refs.excelInput.click();
+      } else if (action.value === 'word') {
+        this.$refs.wordInput.click();
+      }
+    },
+    handleTextImport: function() {
+      var parsed = QuestionParser.parseText(this.importText);
+      this.parsedQuestions = parsed;
+      this.showTextImport = false;
+      if (parsed.length === 0) {
+        this.importErrorMsg = '未识别到题目，请检查格式是否正确。\n每道题应以数字编号开头（如 1. ），选择题需有 A. B. C. D. 选项。';
+        this.showImportError = true;
+      } else {
+        this.showImportResult = true;
+      }
+    },
+    handleExcelUpload: function(e) {
+      var self = this;
+      var file = e.target.files[0];
+      if (!file) return;
+      this.importFileName = file.name;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          var wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+          var s = wb.Sheets[wb.SheetNames[0]];
+          var data = XLSX.utils.sheet_to_json(s);
+          if (data.length === 0) { self.importErrorMsg = 'Excel 文件为空或格式不正确'; self.showImportError = true; return; }
+          var parsed = QuestionParser.parseExcel(data);
+          self.parsedQuestions = parsed;
+          if (parsed.length === 0) { self.importErrorMsg = '未识别到题目列，请确保包含"题目"列'; self.showImportError = true; }
+          else self.showImportResult = true;
+        } catch(err) {
+          self.importErrorMsg = '解析 Excel 失败：' + err.message;
+          self.showImportError = true;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      e.target.value = '';
+    },
+    handleWordUpload: function(e) {
+      var self = this;
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        mammoth.extractRawText({arrayBuffer: ev.target.result}).then(function(res) {
+          var text = res.value;
+          if (!text.trim()) { self.importErrorMsg = 'Word 文件为空或无法提取文字'; self.showImportError = true; return; }
+          var parsed = QuestionParser.parseText(text);
+          self.parsedQuestions = parsed;
+          if (parsed.length === 0) { self.importErrorMsg = '未识别到题目，请检查 Word 文档中的格式'; self.showImportError = true; }
+          else self.showImportResult = true;
+        }).catch(function(err) {
+          self.importErrorMsg = '解析 Word 失败：' + err.message;
+          self.showImportError = true;
+        });
+      };
+      reader.readAsArrayBuffer(file);
+      e.target.value = '';
+    },
+    confirmImport: function() {
+      for (var i = 0; i < this.parsedQuestions.length; i++) {
+        var q = this.parsedQuestions[i];
+        q.id = Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2,6);
+        q.source = 'import';
+        q.createdAt = Date.now();
+        q.correctCount = 0;
+        q.wrongCount = 0;
+        q.isWrong = false;
+        this.questions.push(q);
+      }
+      this.saveQuestions();
+      this.showImportResult = false;
+      this.parsedQuestions = [];
+      this.activeTab = 0;
+    },
+    cancelImport: function() {
+      this.showImportResult = false;
+      this.parsedQuestions = [];
+    },
+    deleteQuestion: function(id) {
+      this.pendingDeleteId = id;
+      this.showDeleteConfirm = true;
+    },
+    doDelete: function() {
+      this.questions = this.questions.filter(function(q) { return q.id !== this.pendingDeleteId }.bind(this));
+      this.saveQuestions();
+      this.pendingDeleteId = null;
+    },
+    startPractice: function() {
+      var pool = [];
+      if (this.practiceScope === 'all') pool = this.questions.slice();
+      else if (this.practiceScope === 'unanswered') pool = this.questions.filter(function(q) { return q.correctCount + q.wrongCount === 0 });
+      else if (this.practiceScope === 'wrong') pool = this.wrongList.slice();
+      for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+      this.practiceQuestions = pool;
+      this.practiceIndex = 0;
+      this.correctCount = 0;
+      this.totalAnswered = 0;
+      this.resetAnswer();
+      this.inPractice = true;
+      this.practiceDone = false;
+    },
+    resetAnswer: function() {
+      this.userChoice = null;
+      this.userText = '';
+      this.showResult = false;
+      this.isCorrect = false;
+    },
+    selectChoice: function(letter) {
+      if (this.showResult) return;
+      this.userChoice = letter;
+    },
+    submitJudge: function(ans) {
+      if (this.showResult) return;
+      this.userChoice = ans;
+      this.submitAnswer();
+    },
+    submitAnswer: function() {
+      var q = this.curQ;
+      if (!q) return;
+      var userAns = '';
+      if (q.type === 'choice' || q.type === 'judge') userAns = this.userChoice;
+      else userAns = this.userText.trim();
+      if (!userAns) return;
+      var correct = userAns === q.answer;
+      if (correct) { q.correctCount++; q.isWrong = false; }
+      else { q.wrongCount++; q.isWrong = true; }
+      this.isCorrect = correct;
+      this.showResult = true;
+      if (correct) this.correctCount++;
+      this.totalAnswered++;
+      this.saveQuestions();
+    },
+    nextQuestion: function() {
+      if (this.practiceIndex < this.practiceQuestions.length - 1) {
+        this.practiceIndex++;
+        this.resetAnswer();
+      } else {
+        this.practiceDone = true;
+      }
+    },
+    confirmExit: function() {
+      this.showExitConfirm = true;
+    },
+    exitPractice: function() {
+      this.inPractice = false;
+      this.practiceDone = false;
+      this.practiceQuestions = [];
+    },
+    restartPractice: function() {
+      this.practiceDone = false;
+      this.startPractice();
+    },
+    clearWrongBook: function() {
+      this.showClearConfirm = true;
+    },
+    doClearWrong: function() {
+      for (var i = 0; i < this.questions.length; i++) {
+        this.questions[i].isWrong = false;
+      }
+      this.saveQuestions();
+    },
+    practiceWrong: function() {
+      this.practiceScope = 'wrong';
+      this.activeTab = 1;
+      this.$nextTick(function() {
+        this.startPractice();
+      });
+    },
+    loadQuestions: function() {
+      try {
+        var data = localStorage.getItem('shuati_questions');
+        if (data) this.questions = JSON.parse(data);
+      } catch(e) { this.questions = []; }
+    },
+    saveQuestions: function() {
+      try { localStorage.setItem('shuati_questions', JSON.stringify(this.questions)); } catch(e) {}
+    }
+  },
+  mounted: function() {
+    this.loadQuestions();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    }
+  }
+});
+
+app.use(vant);
+app.mount('#app');
+</script>
+</body>
+</html>

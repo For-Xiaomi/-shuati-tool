@@ -1,0 +1,9 @@
+{
+  "name": "刷题工具",
+  "short_name": "刷题",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#1989fa",
+  "description": "导入题库，自动识别题目和答案，随时刷题"
+}
