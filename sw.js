@@ -1,5 +1,11 @@
 const CACHE = 'shuati-v3'
-const URLS = ['index.html', 'manifest.json']
+const URLS = ['index.html', 'manifest.json',
+  'lib/vue.global.prod.js',
+  'lib/vant.min.js',
+  'lib/vant.css',
+  'lib/xlsx.full.min.js',
+  'lib/mammoth.browser.min.js'
+]
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)))
