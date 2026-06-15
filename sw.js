@@ -1,4 +1,4 @@
-const CACHE = 'shuati-v1'
+const CACHE = 'shuati-v3'
 const URLS = ['index.html', 'manifest.json']
 
 self.addEventListener('install', e => {
@@ -12,7 +12,9 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('index.html')))
-  )
+  if (e.request.url.startsWith(self.location.origin)) {
+    e.respondWith(
+      caches.match(e.request).then(r => r || fetch(e.request))
+    )
+  }
 })
